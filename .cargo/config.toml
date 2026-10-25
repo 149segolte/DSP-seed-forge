@@ -1,0 +1,2 @@
+[alias]
+shader = "gpu build --shader-crate shader --output-dir target/shaders --target spirv-unknown-vulkan1.1 --auto-install-rust-toolchain"

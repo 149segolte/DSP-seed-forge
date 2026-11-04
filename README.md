@@ -1,8 +1,19 @@
-# rust-gpu + ash compute
+# DSP Seed Forge
 
-A small Vulkan compute project: Rust source is compiled to SPIR-V by
-`cargo-gpu`; an `ash` host dispatches it and verifies the result on the CPU.
-There is no window or graphics pipeline.
+A GPU-powered seed searcher for Dyson Sphere Program, starting with a CLI scaffold.
+Seed searching and automated game-algorithm porting will be added in later steps.
+
+```sh
+cargo run -- --help
+cargo run -- --version
+```
+
+Running without arguments also prints help. Unknown arguments report an error.
+Help and version output do not initialize Vulkan or load shaders.
+
+The working Vulkan compute demo is available through `--gpu-demo`: Rust
+source is compiled to SPIR-V by `cargo-gpu`; an `ash` host dispatches it and
+verifies the result on the CPU. There is no window or graphics pipeline.
 
 ## Prerequisites
 
@@ -41,9 +52,9 @@ From this directory:
 
 ```sh
 cargo shader
-cargo run
+cargo run -- --gpu-demo
 # Optional: choose the number of elements.
-cargo run --release -- 65536
+cargo run --release -- --gpu-demo --count 65536
 ```
 
 `cargo shader` is an alias for:
@@ -71,7 +82,9 @@ Verified 1003 values across 16 workgroups: [1, 3, 5, 7, 9, 11, 13, 15]
 
 - `shader/src/lib.rs`: `no_std` compute entry point, global invocation ID, and
   a writable storage buffer at descriptor set 0, binding 0.
-- `src/main.rs`: Vulkan instance/device selection, storage-buffer allocation,
+- `src/main.rs`: CLI help, version, and argument parsing. `--count` requires
+  `--gpu-demo` and accepts positive 32-bit integers.
+- `src/gpu_demo.rs`: Vulkan instance/device selection, storage-buffer allocation,
   descriptors, compute pipeline, dispatch, host readback, and result verification.
 - `.cargo/config.toml`: shader build command.
 - `build.rs`: Vulkan library discovery for the host linker.
@@ -82,7 +95,7 @@ barrier, and a fence before reading results. Production workloads may benefit
 from device-local buffers and staging transfers. Resource cleanup also runs when
 initialization or dispatch fails.
 
-Keep `threads(64)` in the shader and `WORKGROUP_SIZE` in the host in sync when
+Keep `threads(64)` in the shader and `WORKGROUP_SIZE` in the GPU demo in sync when
 changing the workgroup size. Counts must be positive and fit the selected GPU's
 storage-buffer and dispatch limits; oversized inputs report an error.
 
@@ -91,11 +104,13 @@ storage-buffer and dispatch limits; oversized inputs report an error.
 ```sh
 cargo fmt --check
 cargo fmt --manifest-path shader/Cargo.toml --check
-cargo clippy -- -D warnings
+cargo clippy --all-targets -- -D warnings
+cargo run -- --help
+cargo run -- --version
 cargo shader
-cargo run -- 1
-cargo run -- 64
-cargo run -- 1003
+cargo run -- --gpu-demo --count 1
+cargo run -- --gpu-demo --count 64
+cargo run -- --gpu-demo --count 1003
 ```
 
 The last three checks need a working Vulkan runtime. On macOS, source the SDK's

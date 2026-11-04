@@ -7,8 +7,12 @@ use std::num::NonZeroU32;
 mod gpu_demo;
 
 #[derive(Parser)]
-#[command(version, about)]
+#[command(version, about, disable_version_flag = true)]
 struct Cli {
+    /// Print version
+    #[arg(short = 'v', long, action = clap::ArgAction::Version)]
+    version: bool,
+
     /// Run and verify the GPU compute demo
     #[arg(long)]
     gpu_demo: bool,
